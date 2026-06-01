@@ -42,14 +42,15 @@ INDEX_HTML = """<!doctype html>
   <style>
     :root {{
       color-scheme: dark;
-      --bg: #07090f;
-      --panel: rgba(16, 20, 31, 0.94);
-      --text: #eef3f8;
-      --muted: #94a3b8;
-      --line: rgba(120, 141, 170, 0.34);
-      --accent: #62c7e8;
-      --accent-2: #8f7cff;
-      --ad: rgba(148, 163, 184, 0.28);
+      --bg: #050510;
+      --panel: rgba(9, 13, 28, 0.92);
+      --text: #f5fbff;
+      --muted: #9fb2c7;
+      --line: rgba(0, 229, 255, 0.34);
+      --accent: #00e5ff;
+      --accent-2: #ff2bd6;
+      --green: #b6ff4d;
+      --ad: rgba(0, 229, 255, 0.34);
     }}
     * {{ box-sizing: border-box; }}
     body {{
@@ -57,11 +58,11 @@ INDEX_HTML = """<!doctype html>
       min-height: 100vh;
       font-family: system-ui, -apple-system, "Microsoft JhengHei", "Segoe UI", sans-serif;
       background:
-        linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px),
-        radial-gradient(circle at 20% 10%, rgba(98,199,232,0.12), transparent 25%),
-        radial-gradient(circle at 80% 5%, rgba(143,124,255,0.10), transparent 24%),
-        linear-gradient(135deg, #07090f 0%, #0d1220 52%, #080b12 100%);
+        linear-gradient(rgba(0,229,255,0.055) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,43,214,0.045) 1px, transparent 1px),
+        radial-gradient(circle at 18% 8%, rgba(255,43,214,0.22), transparent 28%),
+        radial-gradient(circle at 82% 4%, rgba(0,229,255,0.18), transparent 26%),
+        linear-gradient(135deg, #050510 0%, #0b1024 48%, #18071f 100%);
       background-size: 44px 44px, 44px 44px, auto, auto, auto;
       color: var(--text);
     }}
@@ -77,11 +78,12 @@ INDEX_HTML = """<!doctype html>
       min-height: 620px;
       border: 1px dashed var(--ad);
       border-radius: 8px;
-      color: #64748b;
+      color: #6eeeff;
       display: grid;
       place-items: center;
-      background: rgba(15, 23, 42, 0.35);
+      background: rgba(8, 12, 28, 0.44);
       font-size: 14px;
+      box-shadow: inset 0 0 22px rgba(0,229,255,0.05), 0 0 18px rgba(255,43,214,0.06);
     }}
     main {{ min-width: 0; }}
     h1 {{
@@ -89,7 +91,7 @@ INDEX_HTML = """<!doctype html>
       font-size: 32px;
       line-height: 1.25;
       letter-spacing: 0;
-      text-shadow: 0 0 18px rgba(98,199,232,0.22);
+      text-shadow: 0 0 18px rgba(0,229,255,0.52), 0 0 32px rgba(255,43,214,0.28);
     }}
     p {{
       margin: 0 0 18px;
@@ -101,7 +103,10 @@ INDEX_HTML = """<!doctype html>
       border: 1px solid var(--line);
       border-radius: 8px;
       padding: 22px;
-      box-shadow: 0 16px 48px rgba(0,0,0,0.42), 0 0 36px rgba(98,199,232,0.08);
+      box-shadow:
+        0 0 0 1px rgba(255,43,214,0.12),
+        0 18px 52px rgba(0,0,0,0.52),
+        0 0 42px rgba(0,229,255,0.12);
       backdrop-filter: blur(10px);
     }}
     .grid {{
@@ -126,7 +131,7 @@ INDEX_HTML = """<!doctype html>
     }}
     input:focus, select:focus {{
       border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(98,199,232,0.12);
+      box-shadow: 0 0 0 3px rgba(0,229,255,0.14), 0 0 18px rgba(255,43,214,0.08);
     }}
     .hint {{
       grid-column: 2;
@@ -149,7 +154,7 @@ INDEX_HTML = """<!doctype html>
       font-weight: 800;
       padding: 12px 18px;
       cursor: pointer;
-      box-shadow: 0 0 20px rgba(98,199,232,0.18), 0 0 20px rgba(143,124,255,0.10);
+      box-shadow: 0 0 24px rgba(0,229,255,0.28), 0 0 26px rgba(255,43,214,0.18);
     }}
     button:hover {{ filter: brightness(1.1); }}
     .status {{
@@ -158,7 +163,7 @@ INDEX_HTML = """<!doctype html>
       border: 1px solid var(--line);
       border-radius: 6px;
       color: var(--muted);
-      background: rgba(16, 22, 41, 0.72);
+      background: rgba(8, 12, 28, 0.72);
       line-height: 1.6;
     }}
     @media (max-width: 900px) {{
@@ -178,15 +183,11 @@ INDEX_HTML = """<!doctype html>
     <aside class="ad">左側廣告欄位</aside>
     <main>
       <h1>Lidiya 實驗室專用字幕平台</h1>
-      <p>上傳影片或音訊，系統會依標題判斷內容，輸出繁體中文 SRT 字幕。</p>
+      <p>上傳影片或音訊，系統會依檔名判斷內容，輸出繁體中文 SRT 字幕。</p>
       <form method="post" action="/convert" enctype="multipart/form-data">
         <div class="grid">
           <label for="media">影片或音訊</label>
           <input id="media" name="media" type="file" accept="video/*,audio/*" required>
-
-          <label for="title">標題</label>
-          <input id="title" name="title" type="text" placeholder="例如：AI 課程錄影、會議紀錄、流行歌曲翻唱" required>
-          <div class="hint">標題會用來判斷主題、專有名詞與破音字。</div>
 
           <label for="mode">模式</label>
           <select id="mode" name="mode">
@@ -278,9 +279,7 @@ class SubtitleWebHandler(BaseHTTPRequestHandler):
             except ValueError:
                 max_chars = 22
 
-            title = self.get_field(form, "title").strip()
-            if not title:
-                title = input_path.stem
+            title = input_path.stem
 
             options = ConvertOptions(
                 video_path=input_path,
@@ -318,6 +317,12 @@ class SubtitleWebHandler(BaseHTTPRequestHandler):
         self.wfile.write(data)
 
     def send_text_error(self, status: HTTPStatus, message: str) -> None:
+        if "RESOURCE_EXHAUSTED" in message or "quota" in message.lower() or "HTTP 429" in message:
+            message = (
+                "Gemini API 配額不足或暫時超過限制。請稍後再試，或到 Google AI Studio / Google Cloud "
+                "確認 API key 的免費額度、速率限制與計費狀態。\n\n"
+                f"原始錯誤：\n{message}"
+            )
         body = f"{status.value} {status.phrase}\n\n{message}\n".encode("utf-8")
         self.send_response(status)
         self.send_header("Content-Type", "text/plain; charset=utf-8")

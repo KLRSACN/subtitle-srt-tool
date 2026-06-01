@@ -24,7 +24,7 @@ from typing import Any, Callable
 
 
 API_BASE = "https://generativelanguage.googleapis.com"
-DEFAULT_MODEL = "gemini-2.5-pro"
+DEFAULT_MODEL = "gemini-2.5-flash"
 DEFAULT_LANGUAGE = "Traditional Chinese, Taiwan usage"
 
 ProgressCallback = Callable[[str], None]
