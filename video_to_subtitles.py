@@ -52,6 +52,10 @@ MODES: dict[str, dict[str, str]] = {
         "label": "一般影片",
         "focus": "Produce accurate subtitles while preserving the speaker's intent.",
     },
+    "broadcast": {
+        "label": "廣播講話聲音",
+        "focus": "Produce clean Traditional Chinese subtitles for spoken-word audio such as broadcasts, narration, interviews, lectures, meetings, and podcasts.",
+    },
     "teaching": {
         "label": "教學/主題影片",
         "focus": "Prioritize terminology, logical flow, and topic-specific wording.",
@@ -210,11 +214,12 @@ Quality rules:
 1. Output only valid SRT content. Do not output Markdown, notes, summaries, or explanations.
 2. Keep accurate timestamps and do not drift away from the media.
 3. Each subtitle should usually be 1 to 2 lines. Keep each line around {max_chars} Chinese characters when possible.
-4. Correct homophone errors, domain terminology, names, brands, plant names, and foreign loanwords according to the topic and glossary.
+4. Use the title/context to infer the subject, then correct homophone errors, domain terminology, names, brands, and foreign loanwords.
 5. Use context to choose the right meaning for Chinese polyphonic or ambiguous characters, including 行, 重, 長, 著, 樂, 便, 只, 數, 種, 藏, 薄, 降, 給.
 6. Improve readability by removing obvious filler words when it does not change the meaning.
 7. Preserve necessary English terms in mixed Chinese/English speech.
 8. Never add facts, captions, speaker labels, or explanations that are not in the media.
+9. For spoken-word subtitles, prefer breaking a subtitle at the first full stop-like punctuation mark. If no full stop is available, break at a comma-like punctuation mark. Keep each subtitle within {max_chars} Chinese characters when practical.
 {song_rules}
 SRT example:
 1

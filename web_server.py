@@ -2,15 +2,13 @@
 """
 Minimal web app for uploading media and downloading generated SRT subtitles.
 
-This server intentionally uses only Python's standard library so it is easy to
-run locally or on a small hosting service. For public production use, put it
-behind HTTPS and set GOOGLE_API_KEY as a server-side environment variable.
+For public production use, put it behind HTTPS and set GOOGLE_API_KEY as a
+server-side environment variable.
 """
 
 from __future__ import annotations
 
 import cgi
-import html
 import os
 import shutil
 import tempfile
@@ -18,12 +16,11 @@ import uuid
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import urlparse
 
 from video_to_subtitles import (
     DEFAULT_LANGUAGE,
     DEFAULT_MODEL,
-    MODES,
     ConvertOptions,
     SubtitleError,
     convert_video_to_srt,
@@ -41,48 +38,61 @@ INDEX_HTML = """<!doctype html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Neon SRT Lab</title>
+  <title>Lidiya 實驗室專用字幕平台</title>
   <style>
     :root {{
-      color-scheme: light;
+      color-scheme: dark;
       --bg: #07090f;
       --panel: rgba(16, 20, 31, 0.94);
-      --panel-strong: #111827;
       --text: #eef3f8;
-      --muted: #93a4b7;
-      --line: rgba(116, 139, 171, 0.32);
-      --cyan: #55c7e8;
-      --magenta: #9b6dff;
-      --lime: #9fd6b5;
-      --warning: #d7b36a;
+      --muted: #94a3b8;
+      --line: rgba(120, 141, 170, 0.34);
+      --accent: #62c7e8;
+      --accent-2: #8f7cff;
+      --ad: rgba(148, 163, 184, 0.28);
     }}
     * {{ box-sizing: border-box; }}
     body {{
       margin: 0;
-      font-family: system-ui, -apple-system, "Microsoft JhengHei", "Segoe UI", sans-serif;
       min-height: 100vh;
+      font-family: system-ui, -apple-system, "Microsoft JhengHei", "Segoe UI", sans-serif;
       background:
-        linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-        radial-gradient(circle at 20% 15%, rgba(85, 199, 232, 0.12), transparent 26%),
-        radial-gradient(circle at 82% 8%, rgba(155, 109, 255, 0.10), transparent 24%),
-        linear-gradient(135deg, #07090f 0%, #0d1220 50%, #080b12 100%);
-      background-size: 42px 42px, 42px 42px, auto, auto, auto;
+        linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px),
+        radial-gradient(circle at 20% 10%, rgba(98,199,232,0.12), transparent 25%),
+        radial-gradient(circle at 80% 5%, rgba(143,124,255,0.10), transparent 24%),
+        linear-gradient(135deg, #07090f 0%, #0d1220 52%, #080b12 100%);
+      background-size: 44px 44px, 44px 44px, auto, auto, auto;
       color: var(--text);
     }}
-    main {{
-      width: min(920px, calc(100% - 32px));
-      margin: 28px auto;
+    .page {{
+      width: min(1320px, calc(100% - 28px));
+      margin: 24px auto;
+      display: grid;
+      grid-template-columns: minmax(140px, 1fr) minmax(420px, 760px) minmax(140px, 1fr);
+      gap: 18px;
+      align-items: start;
     }}
+    .ad {{
+      min-height: 620px;
+      border: 1px dashed var(--ad);
+      border-radius: 8px;
+      color: #64748b;
+      display: grid;
+      place-items: center;
+      background: rgba(15, 23, 42, 0.35);
+      font-size: 14px;
+    }}
+    main {{ min-width: 0; }}
     h1 {{
       margin: 0 0 8px;
-      font-size: 34px;
-      line-height: 1.2;
+      font-size: 32px;
+      line-height: 1.25;
       letter-spacing: 0;
-      text-shadow: 0 0 18px rgba(85, 199, 232, 0.24);
+      text-shadow: 0 0 18px rgba(98,199,232,0.22);
     }}
     p {{
-      margin: 0 0 22px;
+      margin: 0 0 18px;
       color: var(--muted);
       line-height: 1.7;
     }}
@@ -91,47 +101,39 @@ INDEX_HTML = """<!doctype html>
       border: 1px solid var(--line);
       border-radius: 8px;
       padding: 22px;
-      box-shadow:
-        0 0 0 1px rgba(155, 109, 255, 0.08),
-        0 16px 50px rgba(0, 0, 0, 0.4),
-        0 0 38px rgba(85, 199, 232, 0.08);
+      box-shadow: 0 16px 48px rgba(0,0,0,0.42), 0 0 36px rgba(98,199,232,0.08);
       backdrop-filter: blur(10px);
     }}
     .grid {{
       display: grid;
-      grid-template-columns: 160px 1fr;
+      grid-template-columns: 150px 1fr;
       gap: 14px 16px;
       align-items: center;
     }}
     label {{
-      font-weight: 650;
+      font-weight: 700;
       color: #dbe7f3;
     }}
-    input, select, textarea {{
+    input, select {{
       width: 100%;
       border: 1px solid var(--line);
       border-radius: 6px;
       padding: 10px 12px;
       font: inherit;
-      background: rgba(6, 10, 24, 0.82);
+      background: rgba(6, 10, 24, 0.84);
       color: var(--text);
       outline: none;
-      box-shadow: inset 0 0 16px rgba(85, 199, 232, 0.04);
     }}
-    input:focus, select:focus, textarea:focus {{
-      border-color: var(--cyan);
-      box-shadow: 0 0 0 3px rgba(85, 199, 232, 0.12), inset 0 0 16px rgba(85, 199, 232, 0.06);
-    }}
-    textarea {{
-      min-height: 96px;
-      resize: vertical;
-      line-height: 1.6;
+    input:focus, select:focus {{
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(98,199,232,0.12);
     }}
     .hint {{
       grid-column: 2;
       margin-top: -8px;
       color: var(--muted);
       font-size: 14px;
+      line-height: 1.55;
     }}
     .actions {{
       display: flex;
@@ -141,39 +143,29 @@ INDEX_HTML = """<!doctype html>
     button {{
       border: 0;
       border-radius: 6px;
-      background: linear-gradient(90deg, #55c7e8, #8c7bff);
-      color: #061018;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      color: #071018;
       font: inherit;
-      font-weight: 700;
+      font-weight: 800;
       padding: 12px 18px;
       cursor: pointer;
-      box-shadow: 0 0 20px rgba(85, 199, 232, 0.18), 0 0 22px rgba(155, 109, 255, 0.12);
+      box-shadow: 0 0 20px rgba(98,199,232,0.18), 0 0 20px rgba(143,124,255,0.10);
     }}
-    button:hover {{ filter: brightness(1.12); }}
+    button:hover {{ filter: brightness(1.1); }}
     .status {{
       margin-top: 16px;
       padding: 12px 14px;
       border: 1px solid var(--line);
       border-radius: 6px;
       color: var(--muted);
-      background: rgba(16, 22, 41, 0.84);
-      box-shadow: 0 0 24px rgba(85, 199, 232, 0.06);
+      background: rgba(16, 22, 41, 0.72);
+      line-height: 1.6;
     }}
-    .badge {{
-      display: inline-flex;
-      align-items: center;
-      min-height: 28px;
-      padding: 4px 10px;
-      margin-bottom: 12px;
-      border: 1px solid rgba(159, 214, 181, 0.34);
-      border-radius: 999px;
-      color: var(--lime);
-      background: rgba(159, 214, 181, 0.08);
-      font-size: 13px;
-      font-weight: 700;
+    @media (max-width: 900px) {{
+      .page {{ grid-template-columns: 1fr; }}
+      .ad {{ min-height: 96px; }}
     }}
-    @media (max-width: 700px) {{
-      main {{ margin: 20px auto; }}
+    @media (max-width: 620px) {{
       .grid {{ grid-template-columns: 1fr; }}
       .hint {{ grid-column: 1; }}
       .actions {{ justify-content: stretch; }}
@@ -182,39 +174,38 @@ INDEX_HTML = """<!doctype html>
   </style>
 </head>
 <body>
-  <main>
-    <div class="badge">NEON SRT LAB</div>
-    <h1>影片 / 音訊轉 SRT 字幕</h1>
-    <p>上傳任何影片或音訊，選擇最接近的模式並描述主題，完成後直接下載 SRT 字幕檔。API key 放在伺服器端，不會出現在網頁裡。</p>
-    <form method="post" action="/convert" enctype="multipart/form-data">
-      <div class="grid">
-        <label for="media">影片或音訊</label>
-        <input id="media" name="media" type="file" accept="video/*,audio/*" required>
+  <div class="page">
+    <aside class="ad">左側廣告欄位</aside>
+    <main>
+      <h1>Lidiya 實驗室專用字幕平台</h1>
+      <p>上傳影片或音訊，系統會依標題判斷內容，輸出繁體中文 SRT 字幕。</p>
+      <form method="post" action="/convert" enctype="multipart/form-data">
+        <div class="grid">
+          <label for="media">影片或音訊</label>
+          <input id="media" name="media" type="file" accept="video/*,audio/*" required>
 
-        <label for="mode">模式</label>
-        <select id="mode" name="mode">
-          {mode_options}
-        </select>
+          <label for="title">標題</label>
+          <input id="title" name="title" type="text" placeholder="例如：AI 課程錄影、會議紀錄、流行歌曲翻唱" required>
+          <div class="hint">標題會用來判斷主題、專有名詞與破音字。</div>
 
-        <label for="topic">主題</label>
-        <textarea id="topic" name="topic">請簡短描述影片主題，例如：課程教學、訪談、產品介紹、會議紀錄、旅遊 Vlog、歌曲歌詞</textarea>
-        <div class="hint">主題越清楚，專有名詞和同音字修正通常越準。歌曲可填：流行歌曲歌詞，保留副歌重複與英文片語。</div>
+          <label for="mode">模式</label>
+          <select id="mode" name="mode">
+            <option value="broadcast" selected>廣播講話聲音</option>
+            <option value="song">歌曲</option>
+          </select>
 
-        <label for="glossary">術語表</label>
-        <textarea id="glossary" name="glossary" placeholder="一行一個詞，例如：龜背芋&#10;緩釋肥&#10;扦插"></textarea>
-
-        <label for="language">字幕語言</label>
-        <input id="language" name="language" value="{language}">
-
-        <label for="max_chars">每行字數</label>
-        <input id="max_chars" name="max_chars" type="number" min="12" max="40" value="22">
-      </div>
-      <div class="actions">
-        <button type="submit">產生並下載 SRT</button>
-      </div>
-    </form>
-    <div class="status">大型影片可能需要幾分鐘。送出後請保持網頁開啟，完成時瀏覽器會下載字幕檔。</div>
-  </main>
+          <label for="max_chars">每行字數</label>
+          <input id="max_chars" name="max_chars" type="number" min="8" max="40" value="22">
+          <div class="hint">預設 22 字以內。優先用句點斷句；沒有句點時，用逗點斷句。</div>
+        </div>
+        <div class="actions">
+          <button type="submit">產生並下載 SRT</button>
+        </div>
+      </form>
+      <div class="status">大型影片可能需要幾分鐘。請保持頁面開啟，完成後瀏覽器會下載字幕檔。</div>
+    </main>
+    <aside class="ad">右側廣告欄位</aside>
+  </div>
 </body>
 </html>
 """
@@ -226,15 +217,11 @@ def safe_filename(name: str, fallback: str) -> str:
 
 
 def render_index() -> bytes:
-    options = "\n".join(
-        f'<option value="{html.escape(key)}"{" selected" if key == "general" else ""}>{html.escape(info["label"])}</option>'
-        for key, info in MODES.items()
-    )
-    return INDEX_HTML.format(mode_options=options, language=html.escape(DEFAULT_LANGUAGE)).encode("utf-8")
+    return INDEX_HTML.encode("utf-8")
 
 
 class SubtitleWebHandler(BaseHTTPRequestHandler):
-    server_version = "SubtitleWeb/0.1"
+    server_version = "SubtitleWeb/0.2"
 
     def do_GET(self) -> None:
         parsed = urlparse(self.path)
@@ -269,7 +256,7 @@ class SubtitleWebHandler(BaseHTTPRequestHandler):
 
         form = cgi.FieldStorage(fp=self.rfile, headers=self.headers, environ={"REQUEST_METHOD": "POST"})
         media_item = form["media"] if "media" in form else None
-        if not media_item or not getattr(media_item, "filename", ""):
+        if media_item is None or not getattr(media_item, "filename", ""):
             raise SubtitleError("Please upload a video or audio file.")
 
         job_dir = WORK_DIR / uuid.uuid4().hex
@@ -280,29 +267,28 @@ class SubtitleWebHandler(BaseHTTPRequestHandler):
             with input_path.open("wb") as target:
                 shutil.copyfileobj(media_item.file, target)
 
-            glossary_text = self.get_field(form, "glossary")
-            glossary_path = None
-            if glossary_text.strip():
-                glossary_path = job_dir / "glossary.txt"
-                glossary_path.write_text(glossary_text, encoding="utf-8")
-
             output_path = job_dir / f"{input_path.stem}.srt"
-            mode = self.get_field(form, "mode") or "general"
-            if mode not in MODES:
-                mode = "general"
+            mode = self.get_field(form, "mode") or "broadcast"
+            if mode not in {"broadcast", "song"}:
+                mode = "broadcast"
+
             max_chars_text = self.get_field(form, "max_chars") or "22"
             try:
-                max_chars = max(12, min(40, int(max_chars_text)))
+                max_chars = max(8, min(40, int(max_chars_text)))
             except ValueError:
                 max_chars = 22
+
+            title = self.get_field(form, "title").strip()
+            if not title:
+                title = input_path.stem
 
             options = ConvertOptions(
                 video_path=input_path,
                 output_path=output_path,
                 api_key=api_key,
-                topic=self.get_field(form, "topic"),
-                language=self.get_field(form, "language") or DEFAULT_LANGUAGE,
-                glossary_path=glossary_path,
+                topic=f"Title: {title}",
+                language=DEFAULT_LANGUAGE,
+                glossary_path=None,
                 mode=mode,
                 model=os.environ.get("GEMINI_MODEL", DEFAULT_MODEL),
                 max_chars=max_chars,

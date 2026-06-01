@@ -1,100 +1,99 @@
-# 放到 GitHub 並用網址轉字幕
+# GitHub + Render 部署說明
 
-可以把通用影片 / 音訊轉 SRT 工具放到 GitHub，但要注意：
+這是通用影片 / 音訊轉 SRT 字幕工具的 Web 版部署說明。
 
-GitHub 本身只是存放程式碼。若要讓使用者用網址上傳影片、等待轉字幕、下載 SRT，需要部署到「會執行 Python 的伺服器」。
+## 重要觀念
 
-## 不建議只用 GitHub Pages
+GitHub 是放程式碼的地方，不是執行影片轉字幕的伺服器。
 
-GitHub Pages 適合靜態網頁，不適合這個工具，原因是：
+要讓你用網址上傳影片、產生字幕、下載 SRT，需要把 GitHub 程式部署到 Render、Railway、Fly.io 或自己的主機。
 
-- 不能安全保存 Google API Key
-- 不能在伺服器端接收大型影片
-- 不能執行 Python 轉字幕流程
-- 不能長時間等待 Gemini 處理影片
+## 建議先用 Render
 
-## 建議部署方式
+Render 可以直接連接 GitHub repository，部署後會給你一個網址。
 
-比較簡單的選擇：
+## 要上傳 GitHub 的檔案
 
-- Render
-- Railway
-- Fly.io
-- 自己的 VPS / 雲端主機
-
-這些平台可以從 GitHub 讀取程式碼，然後啟動 `web_server.py`。
-
-## 需要設定的環境變數
-
-在部署平台後台設定：
+請上傳 `02_上傳GitHub部署Web版` 裡面的全部檔案，包含：
 
 ```text
-GOOGLE_API_KEY=你的 Google API Key
-HOST=0.0.0.0
-PORT=8000
-MAX_UPLOAD_MB=300
+.gitignore
+.python-version
+DEPLOY.md
+GitHub上傳_先看我.txt
+README.md
+glossary_plant.example.txt
+runtime.txt
+video_to_subtitles.py
+web_server.py
 ```
 
-如果平台會自動提供 `PORT`，就使用平台提供的值。
+## Render 設定
 
-## 啟動指令
+Build Command:
+
+```bash
+echo "no build needed"
+```
+
+Start Command:
 
 ```bash
 python web_server.py
 ```
 
-## Python 版本
-
-專案包含 `runtime.txt`，請讓部署平台使用：
+Instance Type:
 
 ```text
-python-3.12.8
+Free
 ```
 
-Render 如果使用 Python 3.14，會因為標準函式庫移除 `cgi` 而啟動失敗。
+## Render 環境變數
 
-或在 Windows 本機測試：
-
-```powershell
-$env:GOOGLE_API_KEY="你的 Google API Key"
-python web_server.py
-```
-
-然後打開：
+請在 Render 的 Environment Variables 加上：
 
 ```text
-http://127.0.0.1:8000
+GOOGLE_API_KEY=你的 Google API Key
+HOST=0.0.0.0
+PYTHON_VERSION=3.12.8
+MAX_UPLOAD_MB=300
 ```
 
-## GitHub 上傳流程
+`PYTHON_VERSION=3.12.8` 很重要。Render 目前可能預設使用 Python 3.14，但 Python 3.14 移除了 `cgi`，會造成目前這版程式啟動失敗。
 
-1. 建立 GitHub repository。
-2. 把這個資料夾裡的程式推上去。
-3. 到 Render / Railway / Fly.io 建立新服務。
-4. 連接 GitHub repository。
-5. 設定環境變數 `GOOGLE_API_KEY`。
-6. 啟動指令填 `python web_server.py`。
-7. 部署完成後平台會給你一個網址。
+專案也放了 `.python-version`，內容是：
 
-## 現有 Web 功能
+```text
+3.12.8
+```
 
-- 開網址看到上傳表單
-- 上傳影片或音訊
-- 選模式：一般影片、教學/主題影片、植物照顧、歌曲/歌詞
-- 填主題
-- 填術語表
-- 產生並下載 `.srt`
+這是第二層保險。
 
-## 之後建議加強
+## 重新部署
 
-公開上線前，建議再加：
+更新 GitHub 後，到 Render 按：
 
-- 登入權限
-- 單次上傳大小限制
-- 使用次數限制
-- 任務排隊與進度條
-- 轉檔完成後暫存下載連結
-- 自動刪除影片與字幕
-- API 使用量控管
+```text
+Manual Deploy
+Deploy latest commit
+```
 
-如果這個網址只給自己用，可以先用目前版本部署；如果要開放給很多人用，建議先加登入與用量限制。
+如果還是抓到舊版本，可以改按：
+
+```text
+Clear build cache & deploy
+```
+
+## 成功的 Log
+
+成功時應該會看到類似：
+
+```text
+Using Python version 3.12.8
+Running 'python web_server.py'
+Subtitle web app running at http://0.0.0.0:8000
+```
+
+## 免費方案提醒
+
+Render 免費方案閒置後會休眠，第一次打開可能慢 50 秒以上。這不是錯誤。
