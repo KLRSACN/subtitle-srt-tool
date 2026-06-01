@@ -29,7 +29,7 @@ from video_to_subtitles import (
 
 HOST = os.environ.get("HOST", "127.0.0.1")
 PORT = int(os.environ.get("PORT", "8000"))
-MAX_UPLOAD_MB = int(os.environ.get("MAX_UPLOAD_MB", "300"))
+MAX_UPLOAD_MB = int(os.environ.get("MAX_UPLOAD_MB", "120"))
 WORK_DIR = Path(os.environ.get("WORK_DIR", Path(tempfile.gettempdir()) / "subtitle_web_jobs")).resolve()
 
 
@@ -40,7 +40,7 @@ INDEX_HTML = """<!doctype html>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Lidiya 實驗室專用字幕平台</title>
   <style>
-    :root {{
+    :root {
       color-scheme: dark;
       --bg: #050510;
       --panel: rgba(9, 13, 28, 0.92);
@@ -51,9 +51,9 @@ INDEX_HTML = """<!doctype html>
       --accent-2: #ff2bd6;
       --green: #b6ff4d;
       --ad: rgba(0, 229, 255, 0.34);
-    }}
-    * {{ box-sizing: border-box; }}
-    body {{
+    }
+    * { box-sizing: border-box; }
+    body {
       margin: 0;
       min-height: 100vh;
       font-family: system-ui, -apple-system, "Microsoft JhengHei", "Segoe UI", sans-serif;
@@ -65,16 +65,16 @@ INDEX_HTML = """<!doctype html>
         linear-gradient(135deg, #050510 0%, #0b1024 48%, #18071f 100%);
       background-size: 44px 44px, 44px 44px, auto, auto, auto;
       color: var(--text);
-    }}
-    .page {{
+    }
+    .page {
       width: min(1320px, calc(100% - 28px));
       margin: 24px auto;
       display: grid;
       grid-template-columns: minmax(140px, 1fr) minmax(420px, 760px) minmax(140px, 1fr);
       gap: 18px;
       align-items: start;
-    }}
-    .ad {{
+    }
+    .ad {
       min-height: 620px;
       border: 1px dashed var(--ad);
       border-radius: 8px;
@@ -84,21 +84,21 @@ INDEX_HTML = """<!doctype html>
       background: rgba(8, 12, 28, 0.44);
       font-size: 14px;
       box-shadow: inset 0 0 22px rgba(0,229,255,0.05), 0 0 18px rgba(255,43,214,0.06);
-    }}
-    main {{ min-width: 0; }}
-    h1 {{
+    }
+    main { min-width: 0; }
+    h1 {
       margin: 0 0 8px;
       font-size: 32px;
       line-height: 1.25;
       letter-spacing: 0;
       text-shadow: 0 0 18px rgba(0,229,255,0.52), 0 0 32px rgba(255,43,214,0.28);
-    }}
-    p {{
+    }
+    p {
       margin: 0 0 18px;
       color: var(--muted);
       line-height: 1.7;
-    }}
-    form {{
+    }
+    form {
       background: var(--panel);
       border: 1px solid var(--line);
       border-radius: 8px;
@@ -108,18 +108,18 @@ INDEX_HTML = """<!doctype html>
         0 18px 52px rgba(0,0,0,0.52),
         0 0 42px rgba(0,229,255,0.12);
       backdrop-filter: blur(10px);
-    }}
-    .grid {{
+    }
+    .grid {
       display: grid;
       grid-template-columns: 150px 1fr;
       gap: 14px 16px;
       align-items: center;
-    }}
-    label {{
+    }
+    label {
       font-weight: 700;
       color: #dbe7f3;
-    }}
-    input, select {{
+    }
+    input, select {
       width: 100%;
       border: 1px solid var(--line);
       border-radius: 6px;
@@ -128,24 +128,24 @@ INDEX_HTML = """<!doctype html>
       background: rgba(6, 10, 24, 0.84);
       color: var(--text);
       outline: none;
-    }}
-    input:focus, select:focus {{
+    }
+    input:focus, select:focus {
       border-color: var(--accent);
       box-shadow: 0 0 0 3px rgba(0,229,255,0.14), 0 0 18px rgba(255,43,214,0.08);
-    }}
-    .hint {{
+    }
+    .hint {
       grid-column: 2;
       margin-top: -8px;
       color: var(--muted);
       font-size: 14px;
       line-height: 1.55;
-    }}
-    .actions {{
+    }
+    .actions {
       display: flex;
       justify-content: flex-end;
       margin-top: 20px;
-    }}
-    button {{
+    }
+    button {
       border: 0;
       border-radius: 6px;
       background: linear-gradient(90deg, var(--accent), var(--accent-2));
@@ -155,9 +155,9 @@ INDEX_HTML = """<!doctype html>
       padding: 12px 18px;
       cursor: pointer;
       box-shadow: 0 0 24px rgba(0,229,255,0.28), 0 0 26px rgba(255,43,214,0.18);
-    }}
-    button:hover {{ filter: brightness(1.1); }}
-    .status {{
+    }
+    button:hover { filter: brightness(1.1); }
+    .status {
       margin-top: 16px;
       padding: 12px 14px;
       border: 1px solid var(--line);
@@ -165,17 +165,17 @@ INDEX_HTML = """<!doctype html>
       color: var(--muted);
       background: rgba(8, 12, 28, 0.72);
       line-height: 1.6;
-    }}
-    @media (max-width: 900px) {{
-      .page {{ grid-template-columns: 1fr; }}
-      .ad {{ min-height: 96px; }}
-    }}
-    @media (max-width: 620px) {{
-      .grid {{ grid-template-columns: 1fr; }}
-      .hint {{ grid-column: 1; }}
-      .actions {{ justify-content: stretch; }}
-      button {{ width: 100%; }}
-    }}
+    }
+    @media (max-width: 900px) {
+      .page { grid-template-columns: 1fr; }
+      .ad { min-height: 96px; }
+    }
+    @media (max-width: 620px) {
+      .grid { grid-template-columns: 1fr; }
+      .hint { grid-column: 1; }
+      .actions { justify-content: stretch; }
+      button { width: 100%; }
+    }
   </style>
 </head>
 <body>
@@ -253,7 +253,10 @@ class SubtitleWebHandler(BaseHTTPRequestHandler):
 
         content_length = int(self.headers.get("Content-Length", "0"))
         if content_length > MAX_UPLOAD_MB * 1024 * 1024:
-            raise SubtitleError(f"Upload is too large. Current limit is {MAX_UPLOAD_MB} MB.")
+            raise SubtitleError(
+                f"影片太大，目前上傳限制是 {MAX_UPLOAD_MB} MB。Render 免費方案記憶體較小，"
+                "建議先用較短影片或壓縮後再上傳。"
+            )
 
         form = cgi.FieldStorage(fp=self.rfile, headers=self.headers, environ={"REQUEST_METHOD": "POST"})
         media_item = form["media"] if "media" in form else None
@@ -321,6 +324,12 @@ class SubtitleWebHandler(BaseHTTPRequestHandler):
             message = (
                 "Gemini API 配額不足或暫時超過限制。請稍後再試，或到 Google AI Studio / Google Cloud "
                 "確認 API key 的免費額度、速率限制與計費狀態。\n\n"
+                f"原始錯誤：\n{message}"
+            )
+        if "502" in message or "timed out" in message.lower():
+            message = (
+                "服務處理影片時中斷或逾時。Render 免費方案較容易在大型影片上發生，"
+                "建議先用較短影片測試，或改用付費/更高記憶體主機。\n\n"
                 f"原始錯誤：\n{message}"
             )
         body = f"{status.value} {status.phrase}\n\n{message}\n".encode("utf-8")

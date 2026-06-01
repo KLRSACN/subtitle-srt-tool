@@ -59,6 +59,8 @@ PYTHON_VERSION=3.12.8
 MAX_UPLOAD_MB=300
 ```
 
+Render 免費方案記憶體較小。若影片上傳後出現 502，建議先把 `MAX_UPLOAD_MB` 設成 `120` 或更低，並用較短影片測試。
+
 `PYTHON_VERSION=3.12.8` 很重要。Render 目前可能預設使用 Python 3.14，但 Python 3.14 移除了 `cgi`，會造成目前這版程式啟動失敗。
 
 專案也放了 `.python-version`，內容是：

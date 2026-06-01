@@ -9,6 +9,7 @@ tool, GUI, and future song-specific pipeline can share the same core.
 from __future__ import annotations
 
 import argparse
+import http.client
 import json
 import mimetypes
 import os
@@ -121,24 +122,33 @@ def start_resumable_upload(path: Path, api_key: str, mime_type: str) -> str:
 
 def upload_file(path: Path, api_key: str, mime_type: str) -> dict[str, Any]:
     upload_url = start_resumable_upload(path, api_key, mime_type)
-    data = path.read_bytes()
-    req = urllib.request.Request(
-        upload_url,
-        data=data,
-        headers={
-            "Content-Length": str(len(data)),
-            "X-Goog-Upload-Offset": "0",
-            "X-Goog-Upload-Command": "upload, finalize",
-            "Content-Type": mime_type,
-        },
-        method="POST",
-    )
+    size = path.stat().st_size
+    parsed = urllib.parse.urlparse(upload_url)
+    request_target = parsed.path
+    if parsed.query:
+        request_target += f"?{parsed.query}"
+    connection_class = http.client.HTTPSConnection if parsed.scheme == "https" else http.client.HTTPConnection
+    connection = connection_class(parsed.netloc, timeout=600)
     try:
-        with urllib.request.urlopen(req, timeout=600) as response:
-            result = json.loads(response.read().decode("utf-8"))
-    except urllib.error.HTTPError as exc:
-        detail = exc.read().decode("utf-8", errors="replace")
-        raise SubtitleError(f"Could not upload file: HTTP {exc.code}\n{detail}") from exc
+        with path.open("rb") as file_handle:
+            connection.request(
+                "POST",
+                request_target,
+                body=file_handle,
+                headers={
+                    "Content-Length": str(size),
+                    "X-Goog-Upload-Offset": "0",
+                    "X-Goog-Upload-Command": "upload, finalize",
+                    "Content-Type": mime_type,
+                },
+            )
+            response = connection.getresponse()
+            response_body = response.read().decode("utf-8", errors="replace")
+        if response.status >= 400:
+            raise SubtitleError(f"Could not upload file: HTTP {response.status}\n{response_body}")
+        result = json.loads(response_body)
+    finally:
+        connection.close()
 
     file_info = result.get("file")
     if not file_info:
