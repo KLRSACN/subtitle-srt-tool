@@ -1,0 +1,19 @@
+這個資料夾是「要上傳 GitHub / 部署成網址」的版本。
+
+你要上傳 GitHub 的，就是這個資料夾裡的全部檔案。
+
+重要：
+1. 不要把 Google API Key 寫進任何檔案。
+2. 部署到 Render / Railway / Fly.io 時，在平台後台設定環境變數 GOOGLE_API_KEY。
+3. GitHub Pages 和 Netlify 靜態網頁不適合直接跑影片轉字幕後端。
+
+部署大方向：
+1. 建立 GitHub repository
+2. 把這個資料夾全部檔案上傳
+3. 到 Render / Railway / Fly.io 連接 GitHub
+4. 啟動指令：python web_server.py
+5. 環境變數：
+   GOOGLE_API_KEY=你的金鑰
+   HOST=0.0.0.0
+
+更詳細步驟請看 DEPLOY.md。
