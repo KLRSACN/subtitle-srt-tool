@@ -41,33 +41,45 @@ INDEX_HTML = """<!doctype html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>影片 / 歌曲轉 SRT 字幕</title>
+  <title>Neon SRT Lab</title>
   <style>
     :root {{
       color-scheme: light;
-      --bg: #f6f7f4;
-      --text: #1e2620;
-      --muted: #607063;
-      --line: #d9ded7;
-      --accent: #2d6a4f;
-      --accent-dark: #1f513b;
-      --panel: #ffffff;
+      --bg: #07090f;
+      --panel: rgba(16, 20, 31, 0.94);
+      --panel-strong: #111827;
+      --text: #eef3f8;
+      --muted: #93a4b7;
+      --line: rgba(116, 139, 171, 0.32);
+      --cyan: #55c7e8;
+      --magenta: #9b6dff;
+      --lime: #9fd6b5;
+      --warning: #d7b36a;
     }}
     * {{ box-sizing: border-box; }}
     body {{
       margin: 0;
       font-family: system-ui, -apple-system, "Microsoft JhengHei", "Segoe UI", sans-serif;
-      background: var(--bg);
+      min-height: 100vh;
+      background:
+        linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+        radial-gradient(circle at 20% 15%, rgba(85, 199, 232, 0.12), transparent 26%),
+        radial-gradient(circle at 82% 8%, rgba(155, 109, 255, 0.10), transparent 24%),
+        linear-gradient(135deg, #07090f 0%, #0d1220 50%, #080b12 100%);
+      background-size: 42px 42px, 42px 42px, auto, auto, auto;
       color: var(--text);
     }}
     main {{
       width: min(920px, calc(100% - 32px));
-      margin: 32px auto;
+      margin: 28px auto;
     }}
     h1 {{
       margin: 0 0 8px;
-      font-size: 30px;
+      font-size: 34px;
       line-height: 1.2;
+      letter-spacing: 0;
+      text-shadow: 0 0 18px rgba(85, 199, 232, 0.24);
     }}
     p {{
       margin: 0 0 22px;
@@ -79,7 +91,11 @@ INDEX_HTML = """<!doctype html>
       border: 1px solid var(--line);
       border-radius: 8px;
       padding: 22px;
-      box-shadow: 0 12px 30px rgba(30, 38, 32, 0.08);
+      box-shadow:
+        0 0 0 1px rgba(155, 109, 255, 0.08),
+        0 16px 50px rgba(0, 0, 0, 0.4),
+        0 0 38px rgba(85, 199, 232, 0.08);
+      backdrop-filter: blur(10px);
     }}
     .grid {{
       display: grid;
@@ -89,7 +105,7 @@ INDEX_HTML = """<!doctype html>
     }}
     label {{
       font-weight: 650;
-      color: #27362c;
+      color: #dbe7f3;
     }}
     input, select, textarea {{
       width: 100%;
@@ -97,8 +113,14 @@ INDEX_HTML = """<!doctype html>
       border-radius: 6px;
       padding: 10px 12px;
       font: inherit;
-      background: #fff;
+      background: rgba(6, 10, 24, 0.82);
       color: var(--text);
+      outline: none;
+      box-shadow: inset 0 0 16px rgba(85, 199, 232, 0.04);
+    }}
+    input:focus, select:focus, textarea:focus {{
+      border-color: var(--cyan);
+      box-shadow: 0 0 0 3px rgba(85, 199, 232, 0.12), inset 0 0 16px rgba(85, 199, 232, 0.06);
     }}
     textarea {{
       min-height: 96px;
@@ -119,21 +141,36 @@ INDEX_HTML = """<!doctype html>
     button {{
       border: 0;
       border-radius: 6px;
-      background: var(--accent);
-      color: #fff;
+      background: linear-gradient(90deg, #55c7e8, #8c7bff);
+      color: #061018;
       font: inherit;
       font-weight: 700;
       padding: 12px 18px;
       cursor: pointer;
+      box-shadow: 0 0 20px rgba(85, 199, 232, 0.18), 0 0 22px rgba(155, 109, 255, 0.12);
     }}
-    button:hover {{ background: var(--accent-dark); }}
+    button:hover {{ filter: brightness(1.12); }}
     .status {{
       margin-top: 16px;
       padding: 12px 14px;
       border: 1px solid var(--line);
       border-radius: 6px;
       color: var(--muted);
-      background: #fbfcfa;
+      background: rgba(16, 22, 41, 0.84);
+      box-shadow: 0 0 24px rgba(85, 199, 232, 0.06);
+    }}
+    .badge {{
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 4px 10px;
+      margin-bottom: 12px;
+      border: 1px solid rgba(159, 214, 181, 0.34);
+      border-radius: 999px;
+      color: var(--lime);
+      background: rgba(159, 214, 181, 0.08);
+      font-size: 13px;
+      font-weight: 700;
     }}
     @media (max-width: 700px) {{
       main {{ margin: 20px auto; }}
@@ -146,7 +183,8 @@ INDEX_HTML = """<!doctype html>
 </head>
 <body>
   <main>
-    <h1>影片 / 歌曲轉 SRT 字幕</h1>
+    <div class="badge">NEON SRT LAB</div>
+    <h1>影片 / 音訊轉 SRT 字幕</h1>
     <p>上傳任何影片或音訊，選擇最接近的模式並描述主題，完成後直接下載 SRT 字幕檔。API key 放在伺服器端，不會出現在網頁裡。</p>
     <form method="post" action="/convert" enctype="multipart/form-data">
       <div class="grid">
