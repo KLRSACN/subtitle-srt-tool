@@ -1,6 +1,6 @@
 # 放到 GitHub 並用網址轉字幕
 
-可以把程式放到 GitHub，但要注意：
+可以把通用影片 / 音訊轉 SRT 工具放到 GitHub，但要注意：
 
 GitHub 本身只是存放程式碼。若要讓使用者用網址上傳影片、等待轉字幕、下載 SRT，需要部署到「會執行 Python 的伺服器」。
 
@@ -42,6 +42,16 @@ MAX_UPLOAD_MB=300
 ```bash
 python web_server.py
 ```
+
+## Python 版本
+
+專案包含 `runtime.txt`，請讓部署平台使用：
+
+```text
+python-3.12.8
+```
+
+Render 如果使用 Python 3.14，會因為標準函式庫移除 `cgi` 而啟動失敗。
 
 或在 Windows 本機測試：
 

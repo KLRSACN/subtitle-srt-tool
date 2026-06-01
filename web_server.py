@@ -147,7 +147,7 @@ INDEX_HTML = """<!doctype html>
 <body>
   <main>
     <h1>影片 / 歌曲轉 SRT 字幕</h1>
-    <p>上傳影片或音訊，選擇模式與主題，完成後直接下載 SRT 字幕檔。API key 放在伺服器端，不會出現在網頁裡。</p>
+    <p>上傳任何影片或音訊，選擇最接近的模式並描述主題，完成後直接下載 SRT 字幕檔。API key 放在伺服器端，不會出現在網頁裡。</p>
     <form method="post" action="/convert" enctype="multipart/form-data">
       <div class="grid">
         <label for="media">影片或音訊</label>
@@ -159,8 +159,8 @@ INDEX_HTML = """<!doctype html>
         </select>
 
         <label for="topic">主題</label>
-        <textarea id="topic" name="topic">植物照顧教學，包含施肥、繁殖、澆水與病蟲害</textarea>
-        <div class="hint">歌曲可填：流行歌曲歌詞，保留副歌重複與英文片語。</div>
+        <textarea id="topic" name="topic">請簡短描述影片主題，例如：課程教學、訪談、產品介紹、會議紀錄、旅遊 Vlog、歌曲歌詞</textarea>
+        <div class="hint">主題越清楚，專有名詞和同音字修正通常越準。歌曲可填：流行歌曲歌詞，保留副歌重複與英文片語。</div>
 
         <label for="glossary">術語表</label>
         <textarea id="glossary" name="glossary" placeholder="一行一個詞，例如：龜背芋&#10;緩釋肥&#10;扦插"></textarea>
@@ -189,7 +189,7 @@ def safe_filename(name: str, fallback: str) -> str:
 
 def render_index() -> bytes:
     options = "\n".join(
-        f'<option value="{html.escape(key)}"{" selected" if key == "plant" else ""}>{html.escape(info["label"])}</option>'
+        f'<option value="{html.escape(key)}"{" selected" if key == "general" else ""}>{html.escape(info["label"])}</option>'
         for key, info in MODES.items()
     )
     return INDEX_HTML.format(mode_options=options, language=html.escape(DEFAULT_LANGUAGE)).encode("utf-8")
