@@ -28,14 +28,15 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ffmpeg
           python -m pip install --upgrade pip
-          python -m pip install faster-whisper opencc-python-reimplemented gdown
+          python -m pip install faster-whisper opencc-python-reimplemented
 
       - name: Download source videos
         run: |
           mkdir -p input generated-srt
-          gdown --id 1BVGJ9vygesqKB54OhVymE1WYCPoifY4S -O 'input/從角色、世界觀到分鏡！一套工作流完成整個故事宇宙.mp4'
-          gdown --id 19SKmd-0_BN2YjSRs33abCyD4pZQaW1IA -O 'input/AI_自動字幕不夠準？KTV_字幕大師課：從生成到專業手動校正.mp4'
-          gdown --id 1UEasGxExZNgewWmdXZi0tcdurSFBvgmf -O 'input/別再亂花錢！AI_影片生成模型性價比排行榜.mp4'
+          curl -L --fail --retry 3 'https://drive.usercontent.google.com/download?id=1BVGJ9vygesqKB54OhVymE1WYCPoifY4S&export=download&confirm=t' -o 'input/從角色、世界觀到分鏡！一套工作流完成整個故事宇宙.mp4'
+          curl -L --fail --retry 3 'https://drive.usercontent.google.com/download?id=19SKmd-0_BN2YjSRs33abCyD4pZQaW1IA&export=download&confirm=t' -o 'input/AI_自動字幕不夠準？KTV_字幕大師課：從生成到專業手動校正.mp4'
+          curl -L --fail --retry 3 'https://drive.usercontent.google.com/download?id=1UEasGxExZNgewWmdXZi0tcdurSFBvgmf&export=download&confirm=t' -o 'input/別再亂花錢！AI_影片生成模型性價比排行榜.mp4'
+          file input/*.mp4
           ls -lh input
 
       - name: Create subtitles
@@ -56,5 +57,3 @@ jobs:
           path: generated-srt/*.srt
           if-no-files-found: error
           retention-days: 7
-
-# Triggered for the July 5, 2026 batch.
