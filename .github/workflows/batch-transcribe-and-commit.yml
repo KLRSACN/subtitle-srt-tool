@@ -39,8 +39,10 @@ jobs:
           file input/*.mp4
           ls -lh input
 
-      - name: Create subtitles
-        run: python tools/batch_transcribe_drive.py
+      - name: Create subtitles with faster CPU model
+        run: |
+          sed -i 's/medium model/small model/g; s/WhisperModel("medium"/WhisperModel("small"/' tools/batch_transcribe_drive.py
+          python tools/batch_transcribe_drive.py
 
       - name: Commit generated SRT files
         run: |
