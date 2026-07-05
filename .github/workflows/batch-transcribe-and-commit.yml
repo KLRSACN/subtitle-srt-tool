@@ -1,4 +1,4 @@
-name: Transcribe Drive videos and commit SRT
+name: Transcribe Drive videos and upload SRT
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   transcribe:
@@ -16,8 +16,6 @@ jobs:
     timeout-minutes: 180
     steps:
       - uses: actions/checkout@v4
-        with:
-          persist-credentials: true
 
       - uses: actions/setup-python@v5
         with:
@@ -39,20 +37,12 @@ jobs:
           file input/*.mp4
           ls -lh input
 
-      - name: Create subtitles with faster CPU model
+      - name: Create subtitles
         run: |
           sed -i 's/medium model/small model/g; s/WhisperModel("medium"/WhisperModel("small"/' tools/batch_transcribe_drive.py
           python tools/batch_transcribe_drive.py
 
-      - name: Commit generated SRT files
-        run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add generated-srt/*.srt
-          git commit -m 'Add generated Drive SRT subtitles'
-          git push
-
-      - name: Upload backup artifact
+      - name: Upload subtitle artifact
         uses: actions/upload-artifact@v4
         with:
           name: drive-srt-subtitles
