@@ -56,3 +56,5 @@ jobs:
           path: generated-srt/*.srt
           if-no-files-found: error
           retention-days: 7
+
+# Triggered for the July 5, 2026 batch.
