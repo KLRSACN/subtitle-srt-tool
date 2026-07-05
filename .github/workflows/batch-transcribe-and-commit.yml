@@ -1,7 +1,7 @@
 name: Transcribe Drive videos and upload SRT
 
 on:
-  push:
+  pull_request:
     branches: [main]
     paths:
       - '.github/workflows/batch-transcribe-and-commit.yml'
